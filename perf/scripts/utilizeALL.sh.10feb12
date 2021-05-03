@@ -1,0 +1,18 @@
+MONTH=$1
+YEAR=`date |awk '{print $6}'`
+DATA_PATH=/users/logic/sar-u
+OUTPATH=/users/logic/report
+cd $DATA_PATH
+for DATE in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+do
+   FILE=$DATE$MONTH.sar-u
+   if [ -f $FILE ]; then
+      DAY_IDLE=`tail -1 $FILE | awk '{print $5}'` 
+      if [ $DAY_IDLE != "%idle" ]; then
+          DAY_AVER=`tail -1 $FILE | awk '{print $2+$3+$4}'`
+          DAY_PEAK=`cat $FILE |sort -k 5 | head -4 |tail -1|awk '{print 100-$5}'` 
+          DAY_UTILIZE=`tail -1 $FILE | awk '{print " "$2" "$3" "$4" "$5}'`
+          echo "$DATE$MONTH$YEAR $DAY_UTILIZE $DAY_PEAK $DAY_AVER" >> $OUTPATH/`hostname`_asar.out
+      fi 
+   fi
+done

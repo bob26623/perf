@@ -1,0 +1,45 @@
+##Keep Sar Utilize of month##
+#!/bin/sh
+case "$1" in
+
+'') echo " Usage :sh $0 Montho[Jan-Dec]"
+        exit 1
+        ;;
+*)
+month=$1
+touch /tmp/cpu1 /tmp/cpu2 /tmp/cpu3
+CD="/users/logic/sar-u"
+cd $CD
+CHECK=`wc 1$month.sar-u |awk '{print $3}'`
+
+for i in `ls -t *$month*`
+do
+echo $i |cut -f1 -d. > /tmp/cpu1
+if [ $CHECK -ne `wc $i |awk '{print $3}'` ]
+   then
+      for j in `cat $CD/1$month.sar-u |tail +5 |head -1437 |cut -f1-2 -d:`
+      do
+        T=`grep $j: $CD/$i|awk '{print length($1);}`
+        TMP=`echo $T|awk '{print length($1);}'`
+        if [ $TMP -eq 0 ]
+          then
+             echo "0" >> /tmp/cpu1
+          else
+             grep $j: $CD/$i |awk '{print 100-$5}' >> /tmp/cpu1
+        fi
+      done
+   else
+      cat $i |tail +5 |head -1437 |awk '{print 100-$5}' >> /tmp/cpu1
+fi
+      paste /tmp/cpu1 /tmp/cpu2 > /tmp/cpu3
+      cp /tmp/cpu3 /tmp/cpu2
+done
+cd /tmp
+cat /tmp/cpu2 |tr -s '\t' ' ' > /users/logic/report/`hostname`_realcpu.out
+rm -rf cpu1
+rm -rf cpu3
+rm -rf cpu2
+;;
+
+esac
+exit 0

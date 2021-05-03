@@ -1,0 +1,4 @@
+#!/bin/bash
+/usr/bin/mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'lad'@'localhost' IDENTIFIED BY 'lad'"
+/usr/bin/mysql -u root < /var/www/html/adminer/adminer.sql
+echo Done.

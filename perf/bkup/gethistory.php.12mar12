@@ -1,0 +1,147 @@
+<?
+	session_start();
+        if($_SESSION["Username"] == "")
+        {
+                header("location:logout.php");
+                exit();
+        }
+
+        // set timeout period in seconds
+        $inactive = 1800;
+
+        // check to see if $_SESSION['timeout'] is set
+        if(isset($_SESSION['timeout']) ) {
+                $session_life = time() - $_SESSION['timeout'];
+                if($session_life > $inactive)
+                        { session_destroy(); header("Location: logout.php"); }
+        }
+        $_SESSION['timeout'] = time();
+
+        $objConnect = mysql_connect("localhost",$_SESSION["MUSER"],$_SESSION["MPASS"]) or die("Error Connect to Database");
+        $objDB = mysql_select_db("perf");
+        mysql_query("SET NAMES UTF8");
+
+	
+	$GID=$_GET["GRP"];
+	
+	include('script.php');
+	echo "<div class=\"wrapper col5\">"; 
+	echo "<div id=\"container\">";
+	$strSQL = "SELECT cname,gname FROM servergroup WHERE  gid=$GID";
+	$objQuery = mysql_query($strSQL);
+	$objResult = mysql_fetch_array($objQuery);
+	$CUS=$objResult["cname"];
+	$GRP=$objResult["gname"];
+	$FIRST="";
+
+////// generate monthly report
+	echo "<font size=+2>[$GRP] Monthly report </font>&nbsp;&nbsp;";
+	echo "<select id=selfile name=selfile style=width:100px onChange=\"JavaScript:ChkFile('$CUS','$GRP',this.value);\">";
+	//echo "<select id=selfile name=selfile style=width:100px >";
+        for($i=1;$i<=12;$i++){
+          $Dmonth=date("M",strtotime("-$i month"));
+          $Dyear=date("Y",strtotime("-$i month"));
+	  if ($FIRST == "" ) { $FIRST="$Dmonth.$Dyear";}
+          echo "<option value=$Dmonth.$Dyear>$Dmonth.$Dyear</option>";
+        }
+	echo "</select>";
+	echo "&nbsp;&nbsp;<button id=btngen name=btngen OnClick=\"window.location='createPDF.php?GID=$GID&CUS=$CUS&GRP=$GRP&FILE='+selfile.value;\">Generate</button>&nbsp;&nbsp;";
+
+	echo "<button id=btnget name=btnget ";
+
+	if (!file_exists("customer/pdf/$CUS.$GRP.$FIRST.pdf")) {
+                echo "disabled='disabled'";
+           } 
+
+	echo " OnClick=\"window.location='./customer/pdf/$CUS.$GRP.'+ selfile.value +'.pdf';\">Get</button>";
+	echo "<br/><br/>";
+
+//// CPU
+	echo "<H1>CPU usage in last 12 months";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "<img src=images/red.png align=bottom alt=critical /><font size=-1>=85%</font>";
+	echo "<img src=images/yellow.png align=bottom alt=warning /><font size=-1>=70%</font></H1>";
+	echo "<table cellpadding=0 cellspacing=0>";
+	echo "<thead><tr><th>Server Name</th>";
+	$j=1;
+	for($i=12;$i>0;$i--){
+	  $Hmonth[$j]=date("M",strtotime("-$i month"));
+	  echo "<th>$Hmonth[$j]</th>";
+	  $j++;
+	}
+	echo "<th>Avg</th>";
+	echo "</tr></thead>";
+	echo "<tbody>";
+	$strSQL = "SELECT server,serial FROM serverdetail WHERE  gid=$GID ORDER BY server";
+        $objQuery = mysql_query($strSQL);
+        while ($objResult = mysql_fetch_array($objQuery))
+          {
+          	     echo "<tr>";
+                echo "<td>";
+		echo "<a href=\"JavaScript:doCallAjax('server','serverdetail.php?SERIAL=".$objResult["serial"]."','NONE');\">";
+		echo $objResult["server"]."</a></td>";
+
+		$AVG=getAVG("CPU",$Hmonth,$objResult["serial"]);
+		showTable("CPU",$Hmonth,$objResult["serial"],$AVG,$CUS,$objResult["server"]);
+
+		//echo "<td>$AVG</td>";
+                echo "</tr>";
+          } // while loop serverdetail
+	echo "</tbody></table>";
+
+
+//// Memory
+	echo "<H1>Memory (GB) usage in last 12 months";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp";
+	echo "<img src=images/red.png align=bottom alt=critical /><font size=-1>=90%</font>";
+	echo "<img src=images/yellow.png align=bottom alt=warning /><font size=-1>=70%</font></H1>";
+        echo "<table cellpadding=0 cellspacing=0>";
+        echo "<thead><tr><th>Server Name</th>";
+        $j=1;
+        for($i=12;$i>0;$i--){
+          echo "<th>$Hmonth[$j]</th>";
+          $j++;
+        }
+        echo "<th>Avg</th>";
+        echo "</tr></thead>";
+        echo "<tbody>";
+        $strSQL = "SELECT server,serial FROM serverdetail WHERE gid=$GID ORDER BY server";
+        $mobjQuery = mysql_query($strSQL);
+        while ($mobjResult = mysql_fetch_array($mobjQuery))
+          {
+                     echo "<tr>";
+                echo "<td>";
+                echo "<a href=\"JavaScript:doCallAjax('server','serverdetail.php?SERIAL=".$mobjResult["serial"]."','NONE');\">";
+                echo $mobjResult["server"]."</a></td>";
+
+                $AVG=getAVG("MEM",$Hmonth,$mobjResult["serial"]);
+                showTable("MEM",$Hmonth,$mobjResult["serial"],$AVG,$CUS,$mobjResult["server"]);
+
+                //echo "<td>$AVG</td>";
+                echo "</tr>";
+          } // while loop serverdetail
+        echo "</tbody></table>";
+	echo "<div class=\"clear\"></div></div></div>";
+	echo "<span id='server' />";
+
+?>

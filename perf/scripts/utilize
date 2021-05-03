@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+use POSIX;
+
+$data[0][0]="DATE";
+$data[0][1]="%usr";
+$data[0][2]="%sys";
+$data[0][3]="%wio";
+$data[0][4]="%idle";
+$data[0][5]="%peak";
+$data[0][6]="%aver";
+
+#### create data column
+$day=1;
+@list = ` ls -tr *sar-u`;
+for $file (@list){
+#print "$file\n";
+ open(FILE,$file) or die ("Cannot open file: $!");
+ @lines = <FILE>;
+ close (FILE);
+ #@a=split(/\./,$file);
+ $data[$day][0]=substr($file,0,-10);
+ $hr=1;
+ $usr=0;
+ $sys=0;
+ $wio=0;
+ $idle=0;
+ $peak=100;
+ for $data (@lines){
+#print "$data\n";
+   if ( $data=~/\d+:\d+:\d+\s+\d+/) {
+      $_ = $data;
+      ($tmp1)=/\s+(\d+)/;
+      ($tmp2)=/\s+\d+\s+(\d+)/;
+      ($tmp3)=/\s+\d+\s+\d+\s+(\d+)/;
+      ($tmp4)=/\s+\d+\s+\d+\s+\d+\s+(\d+)/;
+	$usr+=$tmp1;
+	$sys+=$tmp2;
+	$wio+=$tmp3;
+	$idle+=$tmp4;
+	if ($peak > $tmp4){
+	  if ($tmp1 != 0 && $tmp2 != 0) {
+	 	$peak=$tmp4;
+	  }
+	}
+	$hr++;
+#print "tmp1=$tmp1\ttmp2=$tmp2\ttmp3=$tmp3\ttmp4=$tmp4\t\n"
+	
+   }
+ }
+      $data[$day][1]=ceil($usr/$hr);
+      $data[$day][2]=ceil($sys/$hr);
+      $data[$day][3]=ceil($wio/$hr);
+      $data[$day][4]=ceil($idle/$hr);
+      $data[$day][5]=ceil(100-$peak);
+      $data[$day][6]=ceil(100-($idle/$hr));
+	
+#print "day $day data ==> $data[$day][1] $data[$day][2] $data[$day][3] $data[$day][4] $data[$day][5] $data[$day][6] hr=$hr\n";
+ $day++;
+}
+close(FILE);
+--$day;
+
+### write output
+open(FILE,">utilize.out") or die ("Cannot open file: $!");
+for(my $i = 0; $i <= $day ; $i++){
+   for(my $j = 0; $j <= 6; $j++){
+      #print "$data[$i][$j]\t";
+      print FILE "$data[$i][$j]\t";
+   }
+   #print "\n";
+   print FILE "\n";
+}
+close(FILE);
+
+

@@ -1,0 +1,371 @@
+<?
+	session_start();
+        if($_SESSION["Username"] == "")
+        {
+                header("location:logout.php");
+                exit();
+        }
+
+        // set timeout period in seconds
+        $inactive = 1800;
+
+        // check to see if $_SESSION['timeout'] is set
+        if(isset($_SESSION['timeout']) ) {
+                $session_life = time() - $_SESSION['timeout'];
+                if($session_life > $inactive)
+                        { session_destroy(); header("Location: logout.php"); }
+        }
+        $_SESSION['timeout'] = time();
+
+        $objConnect = mysql_connect("localhost",$_SESSION["MUSER"],$_SESSION["MPASS"]) or die("Error Connect to Database");
+        $objDB = mysql_select_db("perf");
+        mysql_query("SET NAMES UTF8");
+
+	
+///////////////// add table	
+	
+	echo "<div class=\"wrapper col5\">"; 
+	echo "<div id=\"container\">";
+	echo "<table cellpadding=0 cellspacing=0>";
+//////////////////////// add header in period 12 months
+
+	echo "<thead><tr><th>Server Name</th>";
+	for($i=12;$i>0;$i--){
+	  echo "<th>".date("M",strtotime("-$i month"))."</th>";
+	}
+
+	echo "<th>Avg.</th>";
+	echo "</tr></thead>";
+
+	$lastmonth=date("M",strtotime("-1 month"));
+        $lastyear=date("Y",strtotime("-1 year"));
+        $thisyear=date("Y");
+
+//////////////////////// add data in period 12 months
+
+	echo "<tbody>";
+	$strSQL = "SELECT server,serial FROM serverdetail WHERE  gid=".$_GET["GRP"]." ORDER BY server";
+        $objQuery = mysql_query($strSQL);
+        while ($objResult = mysql_fetch_array($objQuery))
+          {
+          	     echo "<tr>";
+	//add link to getserver.php by ajax
+                echo "<td>";
+		echo "<a href=\"JavaScript:doCallAjax('server','getserver.php?GRP=".$_GET["GRP"]."&YEAR=2012&MON=Jan&SRV=".$objResult["server"]."','NONE');\">";
+		echo $objResult["server"]."</a></td>";
+	//////// query data from history
+	
+        	$AVG=0;
+
+		$strSQL = "SELECT * FROM history WHERE type='CPU' and serial='".$objResult["serial"]."' ORDER BY year";
+echo $strSQL;
+		$objQuery1 = mysql_query($strSQL);
+        	while ($objResult1 = mysql_fetch_array($objQuery1))
+          	{
+	echo $lastyear." ".$objResult1["year"];
+		  if ($lastyear == $objResult1["year"]) 
+		  {
+		     switch ($lastmonth) {
+			case "Jan" :
+			  $AVG=$objResult1["Feb"]+$objResult1["Mar"]+$objResult1["Apr"]+$objResult1["May"]+$objResult1["Jun"]+$objResult1["Jul"]+$objResult1["Aug"]+$objResult1["Sep"]+$objResult1["Oct"]+$objResult1["Nov"]+$objResult1["Dec"];
+			  break;
+			case "Feb" :
+			  $AVG=$objResult1["Mar"]+$objResult1["Apr"]+$objResult1["May"]+$objResult1["Jun"]+$objResult1["Jul"]+$objResult1["Aug"]+$objResult1["Sep"]+$objResult1["Oct"]+$objResult1["Nov"]+$objResult1["Dec"];
+			  break;
+			case "Mar" :
+			  $AVG=$objResult1["Apr"]+$objResult1["May"]+$objResult1["Jun"]+$objResult1["Jul"]+$objResult1["Aug"]+$objResult1["Sep"]+$objResult1["Oct"]+$objResult1["Nov"]+$objResult1["Dec"];
+                          break;
+                        case "Apr" :
+			  $AVG=$objResult1["May"]+$objResult1["Jun"]+$objResult1["Jul"]+$objResult1["Aug"]+$objResult1["Sep"]+$objResult1["Oct"]+$objResult1["Nov"]+$objResult1["Dec"];
+                          break;
+			case "May" :
+			  $AVG=$objResult1["Jun"]+$objResult1["Jul"]+$objResult1["Aug"]+$objResult1["Sep"]+$objResult1["Oct"]+$objResult1["Nov"]+$objResult1["Dec"];
+                          break;
+                        case "Jun" :
+			  $AVG=$objResult1["Jul"]+$objResult1["Aug"]+$objResult1["Sep"]+$objResult1["Oct"]+$objResult1["Nov"]+$objResult1["Dec"];
+                          break;
+			case "Jul" :
+			  $AVG=$objResult1["Aug"]+$objResult1["Sep"]+$objResult1["Oct"]+$objResult1["Nov"]+$objResult1["Dec"];
+                          break;
+                        case "Aug" :
+			  $AVG=$objResult1["Sep"]+$objResult1["Oct"]+$objResult1["Nov"]+$objResult1["Dec"];
+                          break;
+                        case "Sep" :
+			  $AVG=$objResult1["Oct"]+$objResult1["Nov"]+$objResult1["Dec"];
+                          break;
+                        case "Oct" :
+			  $AVG=$objResult1["Nov"]+$objResult1["Dec"];
+                          break;
+                        case "Nov" :
+			  $AVG=$objResult1["Dec"];
+                          break;
+                        case "Dec" :
+			  $AVG=0;
+                          break;
+		     }
+			
+		  }elseif ($thisyear == $objResult1["year"])  {
+		     switch ($thismonth) {
+			case "Jan" :
+			  $AVG+=$objResult1["Jan"];
+			  break;
+			case "Feb" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"];
+			  break;
+			case "Mar" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"]+$objResult1["Mar"];
+                          break;
+                        case "Apr" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"]+$objResult1["Mar"]+$objResult1["Apr"];
+                          break;
+			case "May" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"]+$objResult1["Mar"]+$objResult1["Apr"]+$objResult1["May"];
+                          break;
+                        case "Jun" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"]+$objResult1["Mar"]+$objResult1["Apr"]+$objResult1["May"]+$objResult1["Jun"];
+                          break;
+			case "Jul" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"]+$objResult1["Mar"]+$objResult1["Apr"]+$objResult1["May"]+$objResult1["Jun"]+$objResult1["Jul"];
+                          break;
+                        case "Aug" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"]+$objResult1["Mar"]+$objResult1["Apr"]+$objResult1["May"]+$objResult1["Jun"]+$objResult1["Jul"]+$objResult1["Aug"];
+                          break;
+                        case "Sep" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"]+$objResult1["Mar"]+$objResult1["Apr"]+$objResult1["May"]+$objResult1["Jun"]+$objResult1["Jul"]+$objResult1["Aug"]+$objResult1["Sep"];
+                          break;
+                        case "Oct" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"]+$objResult1["Mar"]+$objResult1["Apr"]+$objResult1["May"]+$objResult1["Jun"]+$objResult1["Jul"]+$objResult1["Aug"]+$objResult1["Sep"]+$objResult1["Oct"];
+                          break;
+                        case "Nov" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"]+$objResult1["Mar"]+$objResult1["Apr"]+$objResult1["May"]+$objResult1["Jun"]+$objResult1["Jul"]+$objResult1["Aug"]+$objResult1["Sep"]+$objResult1["Oct"]+$objResult1["Nov"];
+                          break;
+                        case "Dec" :
+			  $AVG+=$objResult1["Jan"]+$objResult1["Feb"]+$objResult1["Mar"]+$objResult1["Apr"]+$objResult1["May"]+$objResult1["Jun"]+$objResult1["Jul"]+$objResult1["Aug"]+$objResult1["Sep"]+$objResult1["Oct"]+$objResult1["Nov"]+$objResult1["Dec"];
+                          break;
+
+		  } // switch
+		} // if this year
+	  } // while loop history1
+		$AVG=$AVG/12;
+
+		$objQuery1 = mysql_query($strSQL);
+        	while ($objResult1 = mysql_fetch_array($objQuery1))
+          	{
+		  if ($lastyear == $objResult1["year"]) 
+		  {
+		     switch ($lastmonth) {
+			case "Jan" :
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+			  break;
+			case "Feb" :
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+			  break;
+			case "Mar" :
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+                          break;
+                        case "Apr" :
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+                          break;
+			case "May" :
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+                          break;
+                        case "Jun" :
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+                          break;
+			case "Jul" :
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+                          break;
+                        case "Aug" :
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+                          break;
+                        case "Sep" :
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+                          break;
+                        case "Oct" :
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+                          break;
+                        case "Nov" :
+			  echo "<td>".$objResult1["Dec"]."</td>";
+                          break;
+                        case "Dec" :
+                          break;
+		     }
+			
+		  }elseif ($thisyear == $objResult1["year"])  {
+		     switch ($thismonth) {
+			case "Jan" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  break;
+			case "Feb" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  break;
+			case "Mar" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+                          break;
+                        case "Apr" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+                          break;
+			case "May" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+                          break;
+                        case "Jun" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+                          break;
+			case "Jul" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+                          break;
+                        case "Aug" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+                          break;
+                        case "Sep" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+                          break;
+                        case "Oct" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+                          break;
+                        case "Nov" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+                          break;
+                        case "Dec" :
+			  echo "<td>".$objResult1["Jan"]."</td>";
+			  echo "<td>".$objResult1["Feb"]."</td>";
+			  echo "<td>".$objResult1["Mar"]."</td>";
+			  echo "<td>".$objResult1["Apr"]."</td>";
+			  echo "<td>".$objResult1["May"]."</td>";
+			  echo "<td>".$objResult1["Jun"]."</td>";
+			  echo "<td>".$objResult1["Jul"]."</td>";
+			  echo "<td>".$objResult1["Aug"]."</td>";
+			  echo "<td>".$objResult1["Sep"]."</td>";
+			  echo "<td>".$objResult1["Oct"]."</td>";
+			  echo "<td>".$objResult1["Nov"]."</td>";
+			  echo "<td>".$objResult1["Dec"]."</td>";
+                          break;
+
+		  } //switch
+		 }// if this year   
+		} // while loop history
+
+                echo "</tr>";
+          } // while loop serverdetail
+	echo "</tbody></table>";
+	echo "<div class=\"clear\"></div></div></div>";
+
+
+
+//echo "<input type='hidden' name='NONE' id='NONE' value='NONE'>";
+echo "<br/><a href=\"JavaScript:doCallAjax('server','getserver.php?CUS=myhouse','NONE');\">";
+echo "&nbsp;click&nbsp;</a> ";
+
+	echo "<span id='server' />";
+
+?>

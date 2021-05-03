@@ -1,0 +1,56 @@
+<?
+	session_start();
+        if($_SESSION["Username"] == "")
+        {
+                header("location:logout.php");
+                exit();
+        }
+
+        // set timeout period in seconds
+        $inactive = 1800;
+
+        // check to see if $_SESSION['timeout'] is set
+        if(isset($_SESSION['timeout']) ) {
+                $session_life = time() - $_SESSION['timeout'];
+                if($session_life > $inactive)
+                        { session_destroy(); header("Location: logout.php"); }
+        }
+        $_SESSION['timeout'] = time();
+
+        $objConnect = mysql_connect("localhost",$_SESSION["MUSER"],$_SESSION["MPASS"]) or die("Error Connect to Database");
+        $objDB = mysql_select_db("perf");
+        mysql_query("SET NAMES UTF8");
+
+	echo "<table border=0 cellspacing=0 cellpadding=0 bgcolor=black width=50% ><tr><td>";
+  	echo "<table border=0 width=80% cellspacing=3 cellpadding=3>";
+	echo "<tr>";
+	echo "<th width=50 align=center> Server </th>";
+	echo "<th width=50 align=center> Jan </th>";
+	echo "</tr>";
+
+	$strSQL = "SELECT serial FROM serverdetail WHERE  gid=".$_GET["GRP"]." ORDER BY server";
+	echo  $strSQL;
+        $objQuery = mysql_query($strSQL);
+        while ($objResult = mysql_fetch_array($objQuery))
+	  {
+		echo "<tr>";
+		echo "<td>".$objResult["serial"]."</td>";
+		echo "<td>".$objResult["serial"]."</td>";
+		echo "</tr>";
+	  }
+	echo "</table></td></tr></table>";
+	
+
+	
+
+
+
+
+
+//echo "<input type='hidden' name='NONE' id='NONE' value='NONE'>";
+echo "<br/><a href=\"JavaScript:doCallAjax('server','getserver.php?CUS=myhouse','NONE');\">";
+echo "&nbsp;click&nbsp;</a> ";
+
+	echo "<span id='server' />";
+
+?>

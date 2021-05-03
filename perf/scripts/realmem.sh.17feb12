@@ -1,0 +1,41 @@
+##Keep Sar Utilize of month##
+#!/bin/sh
+mm=`prtconf |head -2 | tail -1|awk '{print $3/1024}'`
+case "$1" in
+
+'') echo " Usage :sh $0 Montho[Jan-Dec]"
+        exit 1
+        ;;
+*)
+month=$1
+touch /tmp/mem1 /tmp/mem2 /tmp/mem3  
+CD="/users/logic/sar-r"
+cd $CD
+CHECK=`wc 1$month.sar-r |awk '{print $1}'`
+
+for i in `ls -t *$month*`
+do
+echo $i |cut -f1 -d. > /tmp/mem1
+if [ $CHECK -ne `wc $i |awk '{print $1}'` ]
+   then
+      echo " File on $i incomplete " >> /users/logic/report/`hostname`_realmem.out
+      exit 1
+   else
+      #cat $i |tail +5 |head -287 |awk '{print $2/131072}' >> /tmp/mem1
+      cat $i |tail +5 |head -1437 |awk '{print $2/131072}' | while read line
+      do
+        printf "%3.2f\n" `echo "$mm-$line" | /usr/bin/bc -l ` >> /tmp/mem1
+      done
+fi
+      paste /tmp/mem1 /tmp/mem2 > /tmp/mem3
+      cp /tmp/mem3 /tmp/mem2
+done
+cd /tmp
+cat /tmp/mem2 |tr -s '\t' ' ' > /users/logic/report/`hostname`_realmem.out
+rm -rf mem1
+rm -rf mem3
+rm -rf mem2
+;;
+
+esac
+exit 0

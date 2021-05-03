@@ -1,0 +1,86 @@
+#!/usr/bin/perl
+use POSIX;
+
+##### check gather every x minutes
+@list = ` ls -tr *sar-u`;
+$count=0;
+$sum=0;
+for $file (@list){
+        chomp $file ;
+        open(FILE,$file) or die ("Cannot open file: $!");
+        @lines = <FILE>;
+        close (FILE);
+        $lines = @lines;
+        $sum+=$lines;
+#       print "$file have line $lines\n";
+        $count++;
+}
+$average=ceil($sum/$count);
+
+
+##### choose time stamp
+if ($average <= 55 ) { 
+ open(FILE,"time30.txt") or die ("Cannot open file: $!");
+}elsif ($average > 55 && $average <= 80) { 
+ open(FILE,"time20.txt") or die ("Cannot open file: $!");
+}elsif ($average > 80 && $average <= 100) { 
+ open(FILE,"time15.txt") or die ("Cannot open file: $!");
+}elsif ($average > 100 && $average <= 150) { 
+ open(FILE,"time10.txt") or die ("Cannot open file: $!");
+}elsif ($average > 150 && $average <= 310) { 
+ open(FILE,"time5.txt") or die ("Cannot open file: $!");
+}elsif ($average > 310 && $average <= 380) { 
+ open(FILE,"time4.txt") or die ("Cannot open file: $!");
+}elsif ($average > 380 && $average <= 500) { 
+ open(FILE,"time3.txt") or die ("Cannot open file: $!");
+}elsif ($average > 500 && $average <= 800) { 
+ open(FILE,"time2.txt") or die ("Cannot open file: $!");
+}elsif ($average > 800 && $average <= 1500) { 
+ open(FILE,"time1.txt") or die ("Cannot open file: $!");
+}
+
+$idle[0][0]="time";
+$hr=1;
+while (<FILE>){
+ chomp;
+ $idle[0][$hr] = $_;
+ $hr++;
+}
+close (FILE);
+
+#### create data column
+$day=1;
+@list = ` ls -tr *sar-u`;
+for $file (@list){
+ open(FILE,$file) or die ("Cannot open file: $!");
+ @lines = <FILE>;
+ close (FILE);
+ @a=split(/\./,$file);
+ $idle[$day][0]=$a[0];
+ $hr=1;
+ for $data (@lines){
+   if ( $data=~/\d+:\d+:\d+\s+\d+/) {
+      $_ = $data;
+      ($tmp)=/\s+\d+\s+\d+\s+\d+\s+(\d+)/;
+      $idle[$day][$hr]=100-$tmp;
+      $hr++;
+   }
+ }
+ $day++;
+}
+close(FILE);
+--$day;
+
+### write output
+open(FILE,">realcpu.out") or die ("Cannot open file: $!");
+for(my $j = 0; $j < $hr ; $j++){
+   for(my $i = 0; $i <= $day; $i++){
+      #print "$idle[$i][$j]\t";
+	print FILE "$idle[$i][$j]\t";
+   }
+   #print "\n";
+   print FILE "\n";
+}
+close(FILE);
+
+

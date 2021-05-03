@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+#print $ARGV[0];
+ 
+### create time column
+open(FILE,"time.txt") or die ("Cannot open file: $!");
+$idle[0][0]="time";
+$hr=1;
+while (<FILE>){
+ chomp;
+ $idle[0][$hr] = $_;
+ $hr++;
+}
+close (FILE);
+
+#### create data column
+$day=1;
+@list = ` ls -tr *sar-u`;
+for $file (@list){
+ open(FILE,$file) or die ("Cannot open file: $!");
+ @lines = <FILE>;
+ close (FILE);
+ @a=split(/\./,$file);
+ $idle[$day][0]=$a[0];
+ $hr=1;
+ for $data (@lines){
+   if ( $data=~/\d+:\d+:\d+\s+\d+/) {
+      $_ = $data;
+      ($tmp1)=/\s+(\d+)/;
+      ($tmp2)=/\s+\d+\s+(\d+)/;
+      ($tmp)=/\s+\d+\s+\d+\s+\d+\s+(\d+)/;
+      if ($tmp == 0) {
+        if ($tmp1 != 0 && $tmp2 != 0) {
+          $idle[$day][$hr]=100-$tmp;
+        }else{
+          $idle[$day][$hr]=0;
+        }
+      }else{
+        $idle[$day][$hr]=100-$tmp;
+      }
+      $hr++;
+   }
+ }
+ $day++;
+}
+close(FILE);
+--$day;
+
+### write output
+open(FILE,">realcpu.out") or die ("Cannot open file: $!");
+for(my $j = 0; $j < $hr ; $j++){
+   for(my $i = 0; $i <= $day; $i++){
+      #print "$idle[$i][$j]\t";
+	print FILE "$idle[$i][$j]\t";
+   }
+   #print "\n";
+   print FILE "\n";
+}
+close(FILE);
+
+

@@ -1,0 +1,74 @@
+<link rel="stylesheet" href="styles/layout.css" type="text/css" />
+<body id="top">
+<div class="wrapper col6">
+<div id="footer">
+<?
+	ob_implicit_flush(true); // to flush output
+
+if (($_POST["selgrp"] == '' ) || ($_POST["selsrv"] == '' ) | ($_FILES["fileupload"]["name"] == '' ) ) {
+	echo "<h2>Please select group or server or file</h2>";
+}else{
+
+   $file = $_FILES["fileupload"]["name"];
+   $typefile = $_FILES['fileupload']['type'];
+   $sizefile = $_FILES['fileupload']['size'];
+
+echo "<br/> file=$file type=$typefile size=$sizefile<br\>";
+
+/*
+if(!file_exists("customer/".$_POST["CUS"])) { mkdir("customer/".$_POST["CUS"]); }
+if(!file_exists("customer/".$_POST["CUS"]."/".$_POST["selgrp"])) { mkdir("customer/".$_POST["CUS"]."/".$_POST["selgrp"]); }
+if(!file_exists("customer/".$_POST["CUS"]."/".$_POST["selgrp"]."/".$_POST["selsrv"])) { 
+	mkdir("customer/".$_POST["CUS"]."/".$_POST["selgrp"]."/".$_POST["selsrv"]); 
+	}
+if(!file_exists("customer/".$_POST["CUS"]."/".$_POST["selgrp"]."/".$_POST["selsrv"]."/tmp")) { 
+	mkdir("customer/".$_POST["CUS"]."/".$_POST["selgrp"]."/".$_POST["selsrv"]."/tmp"); 
+	}
+$PATH="customer/".$_POST["CUS"]."/".$_POST["selgrp"]."/".$_POST["selsrv"]."/tmp";
+if(file_exists("$PATH/$file"))
+   {
+        echo "<h2>$file exist!!</h2>";
+   }else{
+        copy($_FILES["fileupload"]["tmp_name"],"$PATH/$file");
+	$GZ="gzip compressed data";
+	echo shell_exec("/usr/bin/file $PATH/$file");
+	$CHK = shell_exec("/usr/bin/file $PATH/$file | grep \"$GZ\"");
+	exec("sleep 3");
+	echo "<hr/>";
+	if ( $CHK == '' ) { 
+		echo "<h2>Incorrect format GZIP FILE!!</h2><br>";
+	}else{
+	  $TAR="USTAR tar archive";
+	  $tarfile = shell_exec("cd $PATH; /usr/bin/ls $file |/usr/bin/cut -f1-3 -d.");
+	  $HOST = shell_exec("cd $PATH; /usr/bin/ls $file |/usr/bin/cut -f1 -d.");
+	  $MONTH = shell_exec("cd $PATH; /usr/bin/ls $file |/usr/bin/cut -f2 -d.");
+	  echo shell_exec("/usr/bin/gunzip $PATH/$file");
+	  $CHK = shell_exec("/usr/bin/file $PATH/$tarfile | grep \"$TAR\""); 
+		if ( $CHK == '' ) {
+		  echo "<h2>Incorrect format TAR FILE!!</h2><br>";
+		}else{
+		  echo "path = $PATH<br/>";
+		  echo "host = $HOST<br/>";
+		  echo "month = $MONTH<br/>";
+		  echo shell_exec("cd $PATH; /usr/bin/tar xf $tarfile");
+
+		  // calculate data 
+		  // sar-u
+		  echo "start aversarALL.sh<br/>";
+		  copy("scripts/aversarALL.sh","$PATH/sar-u/aversarALL.sh");
+		  //echo shell_exec("cd $PWD/$PATH/sar-u;pwd;sh -x $PWD/scripts/aversarALL.sh $MONTH .");
+		  echo exec("cd $PATH/sar-u;ls -l;sh ./aversarALL.sh $MONTH .");
+		  echo system("cd $PATH/sar-u;ls -l;sh ./aversarALL.sh $MONTH .");
+		  echo "Finish aversarALL.sh<br/>";
+
+		} // check tar format
+	  
+	} // check gzip format
+	
+   } // upload file completed
+*/
+} // check post group , server
+
+
+?>
+</div></div>

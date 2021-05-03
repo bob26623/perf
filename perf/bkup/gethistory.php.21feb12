@@ -1,0 +1,139 @@
+<?
+	session_start();
+        if($_SESSION["Username"] == "")
+        {
+                header("location:logout.php");
+                exit();
+        }
+
+        // set timeout period in seconds
+        $inactive = 1800;
+
+        // check to see if $_SESSION['timeout'] is set
+        if(isset($_SESSION['timeout']) ) {
+                $session_life = time() - $_SESSION['timeout'];
+                if($session_life > $inactive)
+                        { session_destroy(); header("Location: logout.php"); }
+        }
+        $_SESSION['timeout'] = time();
+
+        $objConnect = mysql_connect("localhost",$_SESSION["MUSER"],$_SESSION["MPASS"]) or die("Error Connect to Database");
+        $objDB = mysql_select_db("perf");
+        mysql_query("SET NAMES UTF8");
+
+	
+///////////////// add table	
+	
+	echo "<div class=\"wrapper col5\">"; 
+	echo "<div id=\"container\">";
+	echo "<table cellpadding=0 cellspacing=0>";
+//////////////////////// add header in period 12 months
+
+	echo "<thead><tr><th>Server Name</th>";
+	$j=1;
+	for($i=12;$i>0;$i--){
+	  $Hmonth[$j]=date("M",strtotime("-$i month"));
+	  echo "<th>$Hmonth[$j]</th>";
+	  $j++;
+	  //echo "<th>".date("M",strtotime("-$i month"))."</th>";
+	}
+
+	echo "<th>Avg.</th>";
+	echo "</tr></thead>";
+
+	//$lastmonth[0]=date("M",strtotime("-1 month"));
+	//$lastmonth[1]=date("n",strtotime("-1 month"));
+	$lastmonth=date("n",strtotime("-1 month"));
+        $lastyear=date("Y",strtotime("-1 year"));
+        $thisyear=date("Y");
+
+//////////////////////// add data in period 12 months
+
+	echo "<tbody>";
+	$strSQL = "SELECT server,serial FROM serverdetail WHERE  gid=".$_GET["GRP"]." ORDER BY server";
+        $objQuery = mysql_query($strSQL);
+        while ($objResult = mysql_fetch_array($objQuery))
+          {
+          	     echo "<tr>";
+	//add link to getserver.php by ajax
+                echo "<td>";
+		echo "<a href=\"JavaScript:doCallAjax('server','getserver.php?GRP=".$_GET["GRP"]."&YEAR=2012&MON=Jan&SRV=".$objResult["server"]."','NONE');\">";
+		echo $objResult["server"]."</a></td>";
+	//////// query data from history
+	
+	///////// check average in past 12 months
+	
+        	$AVG=0;
+		$countAVG=0;
+	$strSQL = "SELECT * FROM history WHERE type='CPU' and serial='".$objResult["serial"]."' and year='$lastyear'";
+                $objQuery1 = mysql_query($strSQL);
+                if($objResult1 = mysql_fetch_array($objQuery1))
+                {
+                  for($i=1;$i<=12-intval($lastmonth);$i++){
+		    if ($objResult1[$Hmonth[$i]] != ""){
+			$AVG+=$objResult1[$Hmonth[$i]];
+			$countAVG+=1;
+		    }
+                  }
+                } // if loop cpu history last year
+        $strSQL = "SELECT * FROM history WHERE type='CPU' and serial='".$objResult["serial"]."' and year='$thisyear'";
+                $objQuery1 = mysql_query($strSQL);
+                if ($objResult1 = mysql_fetch_array($objQuery1))
+                {
+                  for($i=13-intval($lastmonth);$i<=12;$i++){
+		    if ($objResult1[$Hmonth[$i]] != ""){
+                        $AVG+=$objResult1[$Hmonth[$i]];
+                        $countAVG+=1;
+                    }   
+                  }
+
+                } // if loop cpu history this year
+
+	///////////////// display table
+
+	$strSQL = "SELECT * FROM history WHERE type='CPU' and serial='".$objResult["serial"]."' and year='$lastyear'";
+		$objQuery1 = mysql_query($strSQL);
+        	if($objResult1 = mysql_fetch_array($objQuery1))
+          	{
+		  for($i=1;$i<=12-intval($lastmonth);$i++){
+		    echo "<td>".$objResult1[$Hmonth[$i]]."</td>";
+		  }
+		}else{
+		  for($i=1;$i<=12-intval($lastmonth);$i++){
+		    echo "<td></td>";
+		  }
+		} // if loop cpu history last year
+	$strSQL = "SELECT * FROM history WHERE type='CPU' and serial='".$objResult["serial"]."' and year='$thisyear'";
+		$objQuery1 = mysql_query($strSQL);
+        	if ($objResult1 = mysql_fetch_array($objQuery1))
+          	{
+		  for($i=13-intval($lastmonth);$i<=12;$i++){
+		    echo "<td>".$objResult1[$Hmonth[$i]]."</td>";
+		  }
+		}else{
+		  for($i=1;$i<=intval($lastmonth);$i++){
+		    echo "<td></td>";
+		  }
+
+	  	} // if loop cpu history this year
+
+		if ($countAVG != 0){
+		  echo "<td>".$AVG/$countAVG."</td>";
+		}else{
+		  echo "<td>0</td>";
+		}
+
+                echo "</tr>";
+          } // while loop serverdetail
+	echo "</tbody></table>";
+	echo "<div class=\"clear\"></div></div></div>";
+
+
+
+//echo "<input type='hidden' name='NONE' id='NONE' value='NONE'>";
+echo "<br/><a href=\"JavaScript:doCallAjax('server','getserver.php?CUS=myhouse','NONE');\">";
+echo "&nbsp;click&nbsp;</a> ";
+
+	echo "<span id='server' />";
+
+?>

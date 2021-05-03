@@ -1,0 +1,134 @@
+<?
+	$PATH=$_GET["PATH"]."/".$_GET["YEAR"]."/".$_GET["MON"]."/".$_GET["SRV"].".".$_GET["MON"].".".$_GET["YEAR"];
+	if(!file_exists($_GET["PATH"]."/".$_GET["YEAR"])) { mkdir($_GET["PATH"]."/".$_GET["YEAR"]); }
+	
+	if(file_exists($_GET["PATH"]."/".$_GET["YEAR"]."/".$_GET["MON"])){
+	
+	// add comment 
+        if ($_GET["MYFILE"]){
+          $tmp=explode(":",$_GET["CMT"]);
+          switch($_GET["MYFILE"]){
+          case "utilize" : $data=$tmp[0];
+                break;
+          case "aversar" : $data=$tmp[1];
+                break;
+          case "realcpu" : $data=$tmp[2];
+                break;
+          case "realmem" : $data=$tmp[3];
+                break;
+          case "runq" : $data=$tmp[4];
+                break;
+          case "scan" : $data=$tmp[5];
+                break;
+          }
+          $objFopen = fopen($PATH.".".$_GET["MYFILE"].".cmt", 'w');
+          fwrite($objFopen,$data);
+          if($objFopen) {
+           echo "Comment completed."; 
+          }else{
+           echo "Comment failed"; 
+          } 
+          fclose($objFopen); 
+        }
+?>
+        <hr/>
+        <div class="wrapper col3">
+        <div id="gallery">
+         <ul>
+         <li class="placeholder" style="background-image:url(<?=$PATH?>.utilize.png);">Image Holder</li>
+         <li><a class="swap" href="javascript:void(0)"><img src="<?=$PATH?>.aversar.png" alt="" />
+	 <span><img src="<?=$PATH?>.aversar.png" width="950" height="370" alt="average sar" /></span></a></li>
+
+         <li><a class="swap" href="javascript:void(0)"><img src="<?=$PATH?>.realcpu.png" alt="" />
+	 <span><img src="<?=$PATH?>.realcpu.png" width="950" height="370" alt="real cpu" /></span></a></li>
+<?
+	if (file_exists("$PATH.realmem.png")){
+         echo "<li><a class=\"swap\" href=\"javascript:void(0)\"><img src=\"$PATH.realmem.png\" alt=\"\" />";
+	 echo "<span><img src=\"$PATH.realmem.png\" width=\"950\" height=\"370\" alt=\"real memory\" /></span></a></li>";
+	}
+
+	if (file_exists("$PATH.runq.png")){
+         echo "<li><a class=\"swap\" href=\"javascript:void(0)\"><img src=\"$PATH.runq.png\" alt=\"\" />";
+	 echo "<span><img src=\"$PATH.runq.png\" width=\"950\" height=\"370\" alt=\"run queue\" /></span></a></li>";
+	}
+
+	if (file_exists("$PATH.scan.png")){
+         echo "<li class=\"last\"><a class=\"swap\" href=\"javascript:void(0)\"><img src=\"$PATH.scan.png\" alt=\"\" />";
+	 echo "<span><img src=\"$PATH.scan.png\" width=\"950\" height=\"370\" alt=\"scan rate\" /></span></a></li>";
+	}
+
+
+        echo "</ul>";
+        echo "</div>";
+	echo "<div id=\"container\">";
+	echo "<font color=yellow>Source Data</font> : ";
+	if(file_exists("$PATH.utilize.out")){
+	  echo "<a href=$PATH.utilize.out>utilize</a> ";
+	}
+	if(file_exists("$PATH.aversar.out")){
+	  echo "<a href=$PATH.aversar.out>average</a> ";
+	}
+	if(file_exists("$PATH.realcpu.out")){
+	  echo "<a href=$PATH.realcpu.out>real cpu</a> ";
+	}
+	if(file_exists("$PATH.realmem.out")){
+	  echo "<a href=$PATH.realmem.out>real memory</a> ";
+	}
+	if(file_exists("$PATH.runq.out")){
+	  echo "<a href=$PATH.runq.out>run queue</a> ";
+	}
+	if(file_exists("$PATH.scan.out")){
+	  echo "<a href=$PATH.scan.out>scan rate</a> ";
+	}
+	
+	echo "<br/>";
+
+	} // if for show image
+	$objOpen = opendir($_GET["PATH"]."/".$_GET["YEAR"]);
+        while (($ufile = readdir($objOpen)) !== false)
+          {
+	 if ($ufile != "." && $ufile != ".." && $ufile != "Jan" && $ufile != "Feb" && $ufile != "Mar"&& $ufile != "Apr"&& $ufile != "May"&& $ufile != "Jun"&& $ufile != "Jul"&& $ufile != "Aug"&& $ufile != "Sep"&& $ufile != "Oct"&& $ufile != "Nov"&& $ufile != "Dec")
+	    {
+		$PATH=$_GET["PATH"]."/".$_GET["YEAR"]."/$ufile/".$_GET["SRV"].".$ufile.".$_GET["YEAR"] ;
+		echo "<br/><font color=yellow>Graph on $ufile</font> : ";
+		if(file_exists("$PATH.utilize.png")){
+		echo "<a href=$PATH.utilize.png target=_blank>utilize</a> ";	
+                echo "(<a href=$PATH.utilize.out >s</a>)  ";                                                  
+		}
+		if(file_exists("$PATH.aversar.png")){
+		echo "<a href=$PATH.aversar.png target=_blank>average</a> ";	
+                echo "(<a href=$PATH.aversar.out >s</a>)  ";  
+		}
+		if(file_exists("$PATH.realcpu.png")){
+		echo "<a href=$PATH.realcpu.png target=_blank>real cpu</a> ";	
+                echo "(<a href=$PATH.realcpu.out >s</a>)  "; 
+		}
+		if(file_exists("$PATH.realmem.png")){
+		echo "<a href=$PATH.realmem.png target=_blank>real mem</a> ";	
+                echo "(<a href=$PATH.realmem.out >s</a>)  "; 
+		}
+		if(file_exists("$PATH.runq.png")){
+		echo "<a href=$PATH.runq.png target=_blank>run queue</a> ";	
+                echo "(<a href=$PATH.runq.out>s</a>)  ";   
+		}
+		if(file_exists("$PATH.scan.png")){
+		echo "<a href=$PATH.scan.png target=_blank>scan rate</a> ";	
+                echo "(<a href=$PATH.scan.out>s</a>)"; 
+		}
+		if(file_exists("$PATH.cpu.png")){
+		echo "<a href=$PATH.cpu.png target=_blank>CPU</a> ";	
+                echo "(<a href=$PATH.cpu.out>s</a>)"; 
+		}
+		if(file_exists("$PATH.mem.png")){
+		echo "<a href=$PATH.mem.png target=_blank>Memory</a> ";	
+                echo "(<a href=$PATH.mem.out>s</a>)"; 
+		}
+		echo "<br/>";
+	    } // if 
+		
+	  } // while
+	closedir($objOpen);
+?>
+        </div>
+        </div>
+

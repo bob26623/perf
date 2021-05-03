@@ -1,0 +1,92 @@
+<?php
+        session_start();
+        if($_SESSION["Username"] == "")
+        {
+                header("location:logout.php");
+                exit();
+        }
+
+        // set timeout period in seconds
+        $inactive = 1800;
+
+        // check to see if $_SESSION['timeout'] is set
+        if(isset($_SESSION['timeout']) ) {
+                $session_life = time() - $_SESSION['timeout'];
+                if($session_life > $inactive)
+                        { session_destroy(); header("Location: logout.php"); }
+        }
+        $_SESSION['timeout'] = time();
+
+
+   $objConnect = mysql_connect("localhost",$_SESSION["MUSER"],$_SESSION["MPASS"]) or die("Error Connect to Database");
+   $objDB = mysql_select_db("perf");
+   mysql_query("SET NAMES UTF8");
+?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" lang="EN" dir="ltr">
+<head>
+<title>Performance Reporting Tool</title>
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+<link rel="stylesheet" href="styles/layout.css" type="text/css" />
+<link rel="stylesheet" href="styles/table.css" type="text/css" />
+<script type="text/javascript" src="scripts/ajax.js"></script>
+</head>
+<body id="top">
+<div class="wrapper col3">
+  <div id="breadcrumb">
+    <ul>
+<?
+	$strSQL = "SELECT customer FROM customer WHERE account like '%".$_SESSION["Username"]."%' ORDER BY customer"; 
+ 	$cusQuery = mysql_query($strSQL) or die ("Error Query [".$strSQL."]"); 
+ 	$CUC=1; // customer counter
+ 	$CUS=$_GET["CUS"];
+	echo "<li class=\"first\">Customer : &nbsp;</li> ";
+ 	while ($cusResult = mysql_fetch_array($cusQuery))
+   	{
+        if ( $CUS == "NO" ) { 
+          echo "<li class='first'>";
+          $CUS=$cusResult["customer"];
+        } elseif ( $CUS == $cusResult["customer"] ) { 
+          if ($CUC != "1") {echo "<li>&#166;</li>";}
+          echo "<li class='first'>"; 
+        } else {
+          //echo "<li>&#166;</li>";
+          if ($CUC != "1") {echo "<li>&#166;</li>";}
+          echo "<li><a href=profile.php?PICK=CUS&CUS=".$cusResult["customer"].">";
+        }
+          $CUC+=1;
+        echo "&nbsp;".$cusResult["customer"]."&nbsp;</a></li>";
+
+   	}//while  
+	echo "</ul></div></div>";
+
+	// pass no value to ajax
+	echo "<input type='hidden' name='NONE' id='NONE' value='NONE'>";
+
+	echo "<div class=\"wrapper col5\">";
+  	echo "<div id=\"container\">";
+  	echo "<div id=\"content\">";
+	echo "<h1>Group </h1> ";
+  	$strSQL = "SELECT * FROM servergroup WHERE cname='$CUS' ORDER BY gname";
+  	$gQuery=mysql_query($strSQL) or die ("Error Query [".$strSQL."]");
+  	while ($gResult = mysql_fetch_array($gQuery))
+    	{
+	echo "<button name=btnEdit type=button id=btnEdit OnClick=\"window.location='profile.php?Action=Edit&GID=".$gResult["gid"]."';\">";
+	echo "<img src=./images/edit.bmp alt=edit title=edit  align=absmiddle width=16 heigh=16>";
+   	echo "</button>";
+
+	echo "<button name=btnDel type=button id=btnDel OnClick=\"JavaScript:if(confirm('Delete ".$gResult["gname"]." group ?')==true){window.location='".$_SERVER["PHP_SELF"]."?Action=Del&GID=".$gResult["gid"]."';}\">";
+        echo "<img src=./images/del.jpg alt=delete title=delete  align=absmiddle width=16 heigh=16>";
+   	echo "</button>";
+	echo "<a href=\"JavaScript:doCallAjax('server','listserver.php?GRP=".$gResult["gid"]."','NONE');\">";
+        echo "&nbsp;".$gResult["gname"]."&nbsp;</a><br/> ";
+
+    	}
+  	echo "</div></div></div>";
+?>
+	<span id="server" />
+
+<? mysql_close($objConnect); ?>
+</body>
+</html>

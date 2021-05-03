@@ -1,0 +1,156 @@
+<?php
+        session_start();
+        if($_SESSION["Username"] == "")
+        {
+                header("location:logout.php");
+                exit();
+        }
+
+        // set timeout period in seconds
+        $inactive = 1800;
+
+        // check to see if $_SESSION['timeout'] is set
+        if(isset($_SESSION['timeout']) ) {
+                $session_life = time() - $_SESSION['timeout'];
+                if($session_life > $inactive)
+                        { session_destroy(); header("Location: logout.php"); }
+        }
+        $_SESSION['timeout'] = time();
+
+
+   $objConnect = mysql_connect("localhost",$_SESSION["MUSER"],$_SESSION["MPASS"]) or die("Error Connect to Database");
+   $objDB = mysql_select_db("perf");
+   mysql_query("SET NAMES UTF8");
+?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" lang="EN" dir="ltr">
+<head>
+<title>Performance Reporting Tool</title>
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+<link rel="stylesheet" href="styles/layout.css" type="text/css" />
+<script type="text/javascript" src="scripts/ajax.js"></script>
+</head>
+<body id="top">
+<div class="wrapper col3">
+  <div id="breadcrumb">
+    <ul>
+<?
+// switch($_GET["PICK"]){
+//  case "CUS" :
+	$strSQL = "SELECT customer FROM customer WHERE account like '%".$_SESSION["Username"]."%' ORDER BY customer"; 
+ 	$cusQuery = mysql_query($strSQL) or die ("Error Query [".$strSQL."]"); 
+ 	$CUC=1; // customer counter
+ 	$CUS=$_GET["CUS"];
+	echo "<li class=\"first\">Customer : &nbsp;</li> ";
+ 	while ($cusResult = mysql_fetch_array($cusQuery))
+   	{
+        if ( $CUS == "NO" ) { 
+          echo "<li class='first'>";
+          $CUS=$cusResult["customer"];
+        } elseif ( $CUS == $cusResult["customer"] ) { 
+          if ($CUC != "1") {echo "<li>&#166;</li>";}
+          echo "<li class='first'>"; 
+        } else {
+          //echo "<li>&#166;</li>";
+          if ($CUC != "1") {echo "<li>&#166;</li>";}
+          echo "<li><a href=report.php?PICK=CUS&CUS=".$cusResult["customer"].">";
+        }
+          $CUC+=1;
+        echo "&nbsp;".$cusResult["customer"]."&nbsp;</a></li>";
+
+   	}//while  
+	echo "</ul></div></div>";
+
+	// pass no value to ajax
+	echo "<input type='hidden' name='NONE' id='NONE' value='NONE'>";
+
+	echo "<div class=\"wrapper col3\">";
+  	echo "<div id=\"breadcrumb\">";
+  	echo "<ul>";
+	echo "<li class=\"first\">Group &nbsp;&nbsp;&nbsp;&nbsp; : &nbsp;</li> ";
+  	$strSQL = "SELECT * FROM servergroup WHERE cname='$CUS' ORDER BY gname";
+  	$gQuery=mysql_query($strSQL) or die ("Error Query [".$strSQL."]");
+  	while ($gResult = mysql_fetch_array($gQuery))
+    	{
+        //echo "<li><a href=report.php?PICK=GRP&CUS=$CUS&GRP=".$gResult["gname"].">";
+	echo "<li><a href=\"JavaScript:doCallAjax('history','gethistory.php?CUS=$CUS&GRP=".$gResult["gid"]."','NONE');\">";
+
+        echo "&nbsp;".$gResult["gname"]."&nbsp;</a> ";
+/*
+	// add server here
+	  $strSQL = "SELECT * FROM serverdetail WHERE gid='".$gResult["gid"]."' ORDER BY server";
+	  $sQuery=mysql_query($strSQL) or die ("Error Query [".$strSQL."]");
+	  while ($sResult = mysql_fetch_array($sQuery))
+	    {
+		echo "<a href=report.php?PICK=SRV&CUS=$CUS&GRP=".$gResult["gname"]."&SRV=".$sResult["server"].">";
+		echo "&nbsp;".$sResult["server"]."&nbsp;</a>";
+	    }
+*/
+	echo "</li>";
+
+    	}
+        echo "</ul>";
+  	echo "</div></div></div>";
+/*
+	break;
+  case "GRP" :
+	echo "<li class=\"first\">You are here >> &nbsp;</li> ";
+	echo "<li><a href=report.php?PICK=CUS&CUS=".$_GET["CUS"].">";
+	echo "&nbsp;".$_GET["CUS"]."&nbsp;</a></li>";
+	echo "&nbsp;>>&nbsp;";
+	echo "<li><a href=report.php?PICK=GRP&CUS=".$_GET["CUS"]."&GRP=".$_GET["GRP"].">";
+	echo "&nbsp;".$_GET["GRP"]."&nbsp;</a></li>";
+	echo "</ul></div></div>";
+	echo "<div class=\"wrapper col6\">";
+        echo "<div id=\"footer\">";
+        echo "<div id=\"contactform\">";
+        echo "<h2>Select Server</h2>";
+        echo "<ul>";
+	$strSQL = "SELECT * FROM serverdetail,servergroup WHERE serverdetail.gid=servergroup.gid and cname='".$_GET["CUS"]."' and gname='".$_GET["GRP"]."' ORDER BY server";
+        $gQuery=mysql_query($strSQL) or die ("Error Query [".$strSQL."]");
+        while ($gResult = mysql_fetch_array($gQuery))
+        {
+        echo "<li><a href=report.php?PICK=SRV&CUS=".$_GET["CUS"]."&GRP=".$_GET["GRP"]."&SRV=".$gResult["server"].">";
+        echo "&nbsp;".$gResult["server"]."&nbsp;</a>";
+	// show history cpu mem
+	echo "</li>";
+
+        }
+	echo "</ul>";
+        echo "</div></div></div>";
+	break;
+  case "SRV" :
+	echo "<li class=\"first\">You are here >> &nbsp;</li> ";
+	echo "<li><a href=report.php?PICK=CUS&CUS=".$_GET["CUS"].">";
+	echo "&nbsp;".$_GET["CUS"]."&nbsp;</a></li>";
+	echo "&nbsp;>>&nbsp;";
+	echo "<li><a href=report.php?PICK=GRP&CUS=".$_GET["CUS"]."&GRP=".$_GET["GRP"].">";
+	echo "&nbsp;".$_GET["GRP"]."&nbsp;</a></li>";
+	echo "&nbsp;>>&nbsp;";
+	echo "<li><a href=report.php?PICK=GRP&CUS=".$_GET["CUS"]."&GRP=".$_GET["GRP"]."&SRV=".$_GET["SRV"].">";
+	echo "&nbsp;".$_GET["SRV"]."&nbsp;</a></li>";
+	echo "</ul></div></div>";
+	?>
+	<div class="wrapper col3">
+  	<div id="gallery">
+    	 <ul>
+         <li class="placeholder" style="background-image:url(customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.utilize.png);">Image Holder</li>
+         <li><a class="swap" href="#"><img src="customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.aversar.png" alt="" /><span><img src="customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.aversar.png" width="950" height="370" alt="" /></span></a></li>
+      	 <li><a class="swap" href="#"><img src="customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.realcpu.png" alt="" /><span><img src="customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.realcpu.png" width="950" height="370" alt="" /></span></a></li>
+      	 <li><a class="swap" href="#"><img src="customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.realmem.png" alt="" /><span><img src="customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.realmem.png" width="950" height="370" alt="" /></span></a></li>
+      	 <li><a class="swap" href="#"><img src="customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.runq.png" alt="" /><span><img src="customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.runq.png" width="950" height="370" alt="" /></span></a></li>
+      	 <li class="last"><a class="swap" href="#"><img src="customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.scan.png" alt="" /><span><img src="customer/ais/c-care/sarah1/12/Jan/sarah1.Jan.12.scan.png" width="950" height="370" alt="" /></span></a></li>
+    	</ul>
+  	</div>
+	</div>
+	<?
+	break;
+  }
+*/
+?>
+	<span id="history" />
+
+<? mysql_close($objConnect); ?>
+</body>
+</html>

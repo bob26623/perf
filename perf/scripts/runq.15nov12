@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+
+#print $ARGV[0];
+ 
+### create time column
+open(FILE,"time.txt") or die ("Cannot open file: $!");
+$idle[0][0]="time";
+$hr=1;
+while (<FILE>){
+ chomp;
+ $idle[0][$hr] = $_;
+ $hr++;
+}
+close (FILE);
+
+#### create data column
+$day=1;
+@list = ` ls -tr *sar-q`;
+for $file (@list){
+ open(FILE,$file) or die ("Cannot open file: $!");
+ @lines = <FILE>;
+ close (FILE);
+ @a=split(/\./,$file);
+ $idle[$day][0]=$a[0];
+ $hr=1;
+ for $data (@lines){
+   if ( $data=~/\d+:\d+:\d+\s+\d+/) {
+      $_ = $data;
+      ($tmp)=/\d+:\d+:\d+\s+(\d+.\d+)/;
+      $idle[$day][$hr]=$tmp;
+      $hr++;
+   }
+ }
+ $day++;
+}
+--$day;
+
+### write output
+open(FILE,">runq.out") or die ("Cannot open file: $!");
+for(my $j = 0; $j < $hr ; $j++){
+   for(my $i = 0; $i <= $day; $i++){
+      #print "$idle[$i][$j]\t";
+	print FILE "$idle[$i][$j]\t";
+   }
+   #print "\n";
+   print FILE "\n";
+}
+
+

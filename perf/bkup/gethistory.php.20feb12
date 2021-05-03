@@ -1,0 +1,77 @@
+<?
+	session_start();
+        if($_SESSION["Username"] == "")
+        {
+                header("location:logout.php");
+                exit();
+        }
+
+        // set timeout period in seconds
+        $inactive = 1800;
+
+        // check to see if $_SESSION['timeout'] is set
+        if(isset($_SESSION['timeout']) ) {
+                $session_life = time() - $_SESSION['timeout'];
+                if($session_life > $inactive)
+                        { session_destroy(); header("Location: logout.php"); }
+        }
+        $_SESSION['timeout'] = time();
+
+        $objConnect = mysql_connect("localhost",$_SESSION["MUSER"],$_SESSION["MPASS"]) or die("Error Connect to Database");
+        $objDB = mysql_select_db("perf");
+        mysql_query("SET NAMES UTF8");
+
+	
+///////////////// add table	
+	
+	echo "<div class=\"wrapper col5\">"; 
+	echo "<div id=\"container\">";
+	echo "<table cellpadding=0 cellspacing=0>";
+//////////////////////// add header in period 12 months
+
+	echo "<thead><tr><th>Server Name</th>";
+	for($i=12;$i>0;$i--){
+	  echo "<th>".date("M",strtotime("-$i month"))."</th>";
+	}
+
+	echo "</tr></thead>";
+
+//////////////////////// add data in period 12 months
+
+	echo "<tbody>";
+	$strSQL = "SELECT server,serial FROM serverdetail WHERE  gid=".$_GET["GRP"]." ORDER BY server";
+        $objQuery = mysql_query($strSQL);
+        while ($objResult = mysql_fetch_array($objQuery))
+          {
+          	echo "<tr>";
+	//add link to getserver.php by ajax
+                echo "<td>";
+		echo "<a href=\"JavaScript:doCallAjax('server','getserver.php?GRP=".$_GET["GRP"]."&YEAR=2012&MON=Jan&SRV=".$objResult["server"]."','NONE');\">";
+		echo $objResult["server"]."</a></td>";
+	//////// query data from history
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "<td>".$objResult["serial"]."</td>";
+                echo "</tr>";
+          }
+	echo "</tbody></table>";
+	echo "<div class=\"clear\"></div></div></div>";
+
+
+
+//echo "<input type='hidden' name='NONE' id='NONE' value='NONE'>";
+echo "<br/><a href=\"JavaScript:doCallAjax('server','getserver.php?CUS=myhouse','NONE');\">";
+echo "&nbsp;click&nbsp;</a> ";
+
+	echo "<span id='server' />";
+
+?>
